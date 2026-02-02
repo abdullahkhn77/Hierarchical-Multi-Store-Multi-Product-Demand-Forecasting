@@ -137,51 +137,62 @@ print(report)
 
 ---
 
-## Feature Engineering Candidates
+## Engineered Features (Step 2 Complete)
 
-Based on EDA findings, recommended features for modeling:
+**Total: 144 columns (189 unique features across groups)**
 
-### Temporal Features
-1. Day of week (cyclical encoding: sin/cos)
-2. Month of year (cyclical)
-3. Week of year
-4. Is weekend flag
-5. Is month start/end
-6. Days until/since major holiday
-7. Fourier terms for weekly/yearly seasonality
+| Feature Group | Count | Description |
+|--------------|-------|-------------|
+| **Calendar** | 38 | Year, month, day, quarter, payday flags, etc. |
+| **Cyclical** | 29 | Sin/cos encodings for day, week, month, year |
+| **Fourier** | 14 | 3 harmonics weekly + 4 harmonics yearly |
+| **Lag** | 17 | Sales lags (1,2,3,7,14,21,28,56,364,365), oil/promo lags |
+| **Rolling** | 25 | Mean, std, min, max for 7/14/28/56-day windows |
+| **EWM** | 3 | Exponential weighted means (span 7,14,28) |
+| **Promotion** | 12 | has_promo, promo_change, rolling sums, intensity |
+| **Holiday** | 14 | Pre/post flags, days to/since holiday, types |
+| **Oil** | 15 | Price, lags, changes (%), rolling stats, deviation |
+| **Store/Family** | 12 | Target encodings, type_num, daily totals |
+| **Zero-inflation** | 7 | Zero ratios, days since nonzero, new series flags |
+| **Special** | 3 | Earthquake flags (2016-04-16) |
 
-### Lag Features
-8. Sales lag 1, 7, 14, 28 days
-9. Rolling mean (7-day, 14-day, 28-day windows)
-10. Rolling std (volatility measure)
-11. Same weekday last week/month/year
-12. Expanding mean by store-family
+### Key Feature Highlights
 
-### Promotion Features
-13. On promotion flag (current)
-14. Days since last promotion
-15. Promotion frequency (rolling count)
-16. Family-specific promotion elasticity coefficient
+**Lag Features** (most important for time series):
+- `sales_lag_1, 7, 14, 21, 28, 56` - autoregressive patterns
+- `sales_lag_364, 365` - same period last year
 
-### External Features
-17. Oil price (current)
-18. Oil price lagged (7, 14, 28 days)
-19. Oil price change (%)
-20. Oil price rolling statistics
+**Rolling Features**:
+- `sales_rolling_mean_7, 14, 28, 56` - trend capture
+- `sales_rolling_std_7, 14, 28, 56` - volatility measure
+- `sales_ewm_7, 14, 28` - exponentially weighted (recent > old)
 
-### Holiday Features
-21. Is national/regional/local holiday
-22. Holiday type encoding
-23. Pre/post holiday flags (-3 to +3 days)
-24. Days to next holiday
+**Promotion Features** (critical - 618% avg lift):
+- `has_promo`, `onpromotion_log1p`
+- `promo_rolling_sum_7/14/28` - promotion frequency
+- `promo_change` - promotion momentum
 
-### Store/Product Features
-25. Store type encoding
-26. Store cluster
-27. City/state encoding
-28. Store average sales
-29. Family average sales
-30. Store-family interaction features
+**Oil Features** (r = -0.627):
+- `oil_change_7d, 28d` - price momentum
+- `oil_deviation_28d` - normalized deviation
+- `oil_rolling_mean/std` - trend/volatility
+
+**Target Encodings** (smoothed):
+- `store_nbr_target_enc`, `family_target_enc`
+- `city_target_enc`, `state_target_enc`, `cluster_target_enc`
+
+### Data Splits
+
+| Split | Rows | Date Range |
+|-------|------|------------|
+| **Training** | 2,974,158 | 2013-01-01 to 2017-07-31 |
+| **Validation** | 26,730 | 2017-08-01 to 2017-08-15 |
+
+Files saved:
+- `data/processed/train_features.parquet` (214 MB)
+- `data/processed/train_split.parquet` (211 MB)
+- `data/processed/val_split.parquet` (2.3 MB)
+- `data/processed/features_list.txt`
 
 ---
 
