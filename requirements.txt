@@ -21,8 +21,10 @@ ipykernel>=6.29
 # Kaggle API (for dataset download)
 kaggle>=1.6
 
+# Modeling
+lightgbm>=4.3
+xgboost>=2.0
+
 # Later phases (uncomment when needed):
-# lightgbm>=4.3
-# xgboost>=2.0
 # hierarchicalforecast>=0.4
 # sktime>=0.26

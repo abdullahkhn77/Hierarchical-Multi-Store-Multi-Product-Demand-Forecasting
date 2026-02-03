@@ -8,15 +8,18 @@ A production-grade hierarchical demand forecasting pipeline for the Corporacion 
 favorita-hierarchical-forecast/
 ├── data/
 │   ├── raw/                 # Original Kaggle dataset files
-│   └── processed/           # Cleaned & merged data (parquet)
+│   ├── processed/           # Cleaned & merged data (parquet)
+│   └── predictions/         # Model predictions & error analysis
+├── models/                  # Trained model artifacts
 ├── notebooks/               # Jupyter notebooks for exploration
 ├── src/
 │   ├── __init__.py
 │   ├── data_prep.py        # Data loading & preprocessing
 │   ├── eda.py              # Exploratory data analysis
 │   ├── features.py         # Feature engineering (Step 2)
+│   ├── models.py           # Modeling & evaluation (Step 3)
 │   └── utils.py            # Utility functions
-├── plots/                   # EDA visualizations
+├── plots/                   # EDA & model visualizations
 ├── requirements.txt
 └── README.md
 ```
@@ -216,19 +219,91 @@ All plots are saved to `plots/` directory:
 
 ---
 
-## Modeling Approach (Step 2+)
+## Baseline Modeling Results (Step 3 Complete)
 
-### Baseline Models
-1. **Seasonal Naive** - Same day last week/year
-2. **Moving Average** - Rolling 7/28-day averages
-3. **Linear Regression** - With calendar features
+### Cross-Validation Performance
 
-### Advanced Models
-4. **LightGBM/XGBoost** - Gradient boosting with lag features
-5. **Prophet** - For capturing multiple seasonalities
-6. **Temporal Fusion Transformer** - Deep learning for long-horizon
+| Model | RMSLE | MAE | MAPE | Improvement |
+|-------|-------|-----|------|-------------|
+| **Naive Last Week** | 0.5690 | - | - | Baseline |
+| **HistGradientBoosting** | **0.4879 ± 0.02** | 55.34 | 40.8% | **14.3%** |
 
-### Hierarchical Reconciliation
+### CV Fold Details
+
+| Fold | Train Period | Val Period | RMSLE |
+|------|--------------|------------|-------|
+| Fold 1 | 2013-01-01 to 2017-06-30 | 2017-07-01 to 2017-07-15 | 0.4846 |
+| Fold 2 | 2013-01-01 to 2017-07-15 | 2017-07-16 to 2017-07-31 | 0.4680 |
+| Fold 3 | 2013-01-01 to 2017-07-31 | 2017-08-01 to 2017-08-15 | 0.5110 |
+
+### Error Analysis by Product Family
+
+**Best Predicted (lowest RMSLE):**
+| Family | RMSLE | Notes |
+|--------|-------|-------|
+| GROCERY I | 0.129 | High volume, consistent patterns |
+| PRODUCE | 0.133 | Daily essentials |
+| DAIRY | 0.145 | Staple products |
+| BREAD/BAKERY | 0.157 | Regular demand |
+| DELI | 0.166 | Consistent patterns |
+
+**Most Challenging (highest RMSLE):**
+| Family | RMSLE | Zero % | Notes |
+|--------|-------|--------|-------|
+| HARDWARE | 0.742 | 38% | Sparse, intermittent |
+| LINGERIE | 0.734 | 10% | Low frequency |
+| SCHOOL & OFFICE | 0.718 | 55% | Highly seasonal |
+| GROCERY II | 0.651 | 2% | Variable demand |
+| HOME APPLIANCES | 0.645 | 77% | Very sparse |
+
+### Key Insights
+
+1. **Promotion Effect on Accuracy**:
+   - Promo days: RMSLE = 0.34 (easier to predict)
+   - Non-promo days: RMSLE = 0.57 (harder)
+
+2. **Zero-Inflation Challenge**:
+   - 14.5% of validation records are zeros
+   - Model over-predicts zeros 64% of the time
+   - Non-zero RMSLE = 0.45 (much better)
+
+3. **Model trained on 133 features** including lags, rolling stats, promotions, oil, holidays
+
+### Model Artifacts
+
+```
+models/
+├── hgb_baseline_fold1.joblib   # CV fold 1 model
+├── hgb_baseline_fold2.joblib   # CV fold 2 model
+├── hgb_baseline_fold3.joblib   # CV fold 3 model
+├── hgb_final.joblib            # Final model (all data)
+└── label_encoders.joblib       # Categorical encoders
+
+data/predictions/
+├── oof_predictions.parquet     # Out-of-fold predictions
+└── error_by_family.csv         # Error analysis by family
+
+plots/
+├── feature_importance.png      # Top 30 features
+├── validation_predictions.png  # Actual vs predicted timeseries
+├── actual_vs_predicted_scatter.png
+└── error_by_family.png         # RMSLE by product family
+```
+
+---
+
+## Modeling Approach
+
+### Baseline Models (Step 3 - Complete)
+1. **Seasonal Naive** - Same day last week (RMSLE = 0.569)
+2. **HistGradientBoosting** - sklearn's fast gradient boosting (RMSLE = 0.488)
+
+### Advanced Models (Step 4 - Planned)
+3. **LightGBM/XGBoost** - Production-grade gradient boosting
+4. **Prophet** - For capturing multiple seasonalities
+5. **Temporal Fusion Transformer** - Deep learning for long-horizon
+
+### Hierarchical Reconciliation (Step 4 - Planned)
 - Bottom-up: Forecast store-family, aggregate up
 - Top-down: Forecast total, distribute down
 - Optimal reconciliation (MinT, ERM)
@@ -255,11 +330,12 @@ print(results['promotion'])
 
 ---
 
-## Next Steps
+## Project Progress
 
-- [ ] **Step 2**: Feature Engineering + Baseline Models
-- [ ] **Step 3**: Advanced ML Models (LightGBM, XGBoost)
-- [ ] **Step 4**: Hierarchical Reconciliation
+- [x] **Step 1**: Setup + EDA (Complete)
+- [x] **Step 2**: Feature Engineering (Complete - 189 features)
+- [x] **Step 3**: Baseline Modeling (Complete - RMSLE 0.49)
+- [ ] **Step 4**: Advanced Models + Hierarchical Reconciliation
 - [ ] **Step 5**: Model Evaluation & Selection
 - [ ] **Step 6**: Production Pipeline & Deployment
 
