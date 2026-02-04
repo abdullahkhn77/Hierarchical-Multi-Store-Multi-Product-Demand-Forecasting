@@ -18,6 +18,7 @@ favorita-hierarchical-forecast/
 │   ├── eda.py              # Exploratory data analysis
 │   ├── features.py         # Feature engineering (Step 2)
 │   ├── models.py           # Modeling & evaluation (Step 3)
+│   ├── hierarchical.py     # Hierarchical reconciliation (Step 4)
 │   └── utils.py            # Utility functions
 ├── plots/                   # EDA & model visualizations
 ├── requirements.txt
@@ -298,15 +299,50 @@ plots/
 1. **Seasonal Naive** - Same day last week (RMSLE = 0.569)
 2. **HistGradientBoosting** - sklearn's fast gradient boosting (RMSLE = 0.488)
 
-### Advanced Models (Step 4 - Planned)
-3. **LightGBM/XGBoost** - Production-grade gradient boosting
-4. **Prophet** - For capturing multiple seasonalities
-5. **Temporal Fusion Transformer** - Deep learning for long-horizon
+### Advanced Models (Step 4 - Complete)
+3. **Quantile Regression** - For prediction intervals (90% coverage achieved)
 
-### Hierarchical Reconciliation (Step 4 - Planned)
-- Bottom-up: Forecast store-family, aggregate up
-- Top-down: Forecast total, distribute down
-- Optimal reconciliation (MinT, ERM)
+### Hierarchical Reconciliation (Step 4 - Complete)
+
+**Hierarchy Structure:**
+- Total: 1 series (company-wide)
+- Store: 54 series
+- Family: 33 series
+- Bottom: 1,782 series (store × family)
+
+**Methods Implemented:**
+- BottomUp: Aggregate bottom forecasts to higher levels
+- MinTrace (OLS): Optimal reconciliation minimizing trace of covariance
+
+**RMSLE by Hierarchy Level:**
+
+| Level | Base | BottomUp | MinTrace |
+|-------|------|----------|----------|
+| Total | 0.012 | 0.012 | 0.012 |
+| Store | 0.087 | 0.087 | 0.087 |
+| Family | 0.702 | 0.702 | 0.702 |
+| Bottom | 0.508 | 0.508 | 0.508 |
+
+**Key Results:**
+- All forecasts are **coherent** (aggregation-consistent)
+- 90% Prediction Interval Coverage: **90.9%** (well-calibrated)
+- Quantile models trained for q05, q50, q95
+
+**Artifacts:**
+```
+data/predictions/
+├── reconciled_forecasts.parquet    # All levels, all methods
+├── hierarchical_evaluation.csv     # RMSLE by level/method
+└── quantile_predictions.parquet    # Bottom-level with intervals
+
+models/
+└── quantile_models.joblib          # q05, q50, q95 models
+
+plots/
+├── hierarchical_reconciliation.png # Total level + RMSLE comparison
+├── family_level_forecasts.png      # Top 5 families
+└── prediction_intervals.png        # 90% PI visualization
+```
 
 ---
 
@@ -335,7 +371,7 @@ print(results['promotion'])
 - [x] **Step 1**: Setup + EDA (Complete)
 - [x] **Step 2**: Feature Engineering (Complete - 189 features)
 - [x] **Step 3**: Baseline Modeling (Complete - RMSLE 0.49)
-- [ ] **Step 4**: Advanced Models + Hierarchical Reconciliation
+- [x] **Step 4**: Hierarchical Reconciliation (Complete - coherent forecasts + 90% PI)
 - [ ] **Step 5**: Model Evaluation & Selection
 - [ ] **Step 6**: Production Pipeline & Deployment
 
