@@ -21,7 +21,9 @@ favorita-hierarchical-forecast/
 │   ├── hierarchical.py     # Hierarchical reconciliation (Step 4)
 │   └── utils.py            # Utility functions
 ├── plots/                   # EDA & model visualizations
+├── app.py                   # Streamlit dashboard
 ├── requirements.txt
+├── requirements-dashboard.txt
 └── README.md
 ```
 
@@ -346,6 +348,41 @@ plots/
 
 ---
 
+## Interactive Dashboard (Step 5 Complete)
+
+A Streamlit dashboard for exploring forecasts interactively.
+
+### Running the Dashboard
+
+```bash
+# Install dashboard dependencies
+pip install -r requirements-dashboard.txt
+
+# Launch the app
+streamlit run app.py
+```
+
+Open http://localhost:8501 in your browser.
+
+### Dashboard Features
+
+| Tab | Description |
+|-----|-------------|
+| **Overview** | Company-wide KPIs, total forecast chart, RMSLE by hierarchy level |
+| **Drill-Down** | Interactive store/family exploration with faceted timeseries |
+| **What-If Simulator** | Promotion elasticity simulation with revenue projections |
+| **Uncertainty & Impact** | Prediction interval coverage, inventory cost analysis |
+
+### Screenshots
+
+The dashboard provides:
+- Real-time filtering by date range, store, and product family
+- Comparison of base vs. reconciled forecasts
+- Promotion lift calculator (618% average lift)
+- Inventory cost optimization using prediction intervals
+
+---
+
 ## Usage
 
 ```python
@@ -372,7 +409,7 @@ print(results['promotion'])
 - [x] **Step 2**: Feature Engineering (Complete - 189 features)
 - [x] **Step 3**: Baseline Modeling (Complete - RMSLE 0.49)
 - [x] **Step 4**: Hierarchical Reconciliation (Complete - coherent forecasts + 90% PI)
-- [ ] **Step 5**: Model Evaluation & Selection
+- [x] **Step 5**: Interactive Dashboard (Complete - Streamlit app with What-If simulator)
 - [ ] **Step 6**: Production Pipeline & Deployment
 
 ---
